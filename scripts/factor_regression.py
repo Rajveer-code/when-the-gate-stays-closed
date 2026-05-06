@@ -32,7 +32,15 @@ import statsmodels.api as sm
 PARQUET_PATH   = Path("results/predictions/predictions_ensemble.parquet")
 OUTPUT_DIR     = Path("results/metrics")
 COST_BPS       = 5.0        # one-way transaction cost in basis points
-TICKERS        = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+# Full 30-stock NASDAQ-100 continuous-member universe (same as main pipeline).
+# NOTE: this constant documents the expected universe; the actual tickers are
+# derived at runtime from the predictions parquet via get_level_values('ticker').
+TICKERS = [
+    "AAPL", "ADBE", "ADI",  "ADP",  "AMAT", "AMGN", "AMZN", "AVGO", "BIIB",
+    "CDNS", "COST", "CSCO", "GILD", "GOOGL","INTC", "INTU", "KLAC", "LRCX",
+    "MCHP", "MDLZ", "META", "MSFT", "NFLX", "NVDA", "PYPL", "QCOM", "REGN",
+    "SBUX", "TSLA", "TXN",
+]
 
 # Ken French data URLs (free, no login required)
 FF5_URL  = ("https://mba.tuck.dartmouth.edu/pages/faculty/ken.french/ftp/"
@@ -54,7 +62,7 @@ def reconstruct_strategy_returns(
         TopK1           — top-1 by calibrated prob, daily
         TopK1_LongShort — long top-1, short bottom-1 (dollar-neutral)
         Baseline_P50    — equal-weight all tickers with prob > 0.50
-        Equal_Weight    — equal-weight all 7 tickers always
+        Equal_Weight    — equal-weight all tickers in the universe always
         Random_Top1     — mean of 50 random-selection simulations
 
     Parameters

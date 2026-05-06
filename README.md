@@ -17,13 +17,13 @@ Most machine learning research in finance asks: *can we predict the market?* Thi
 
 The answer is the **IC-Gated Deployment Framework (ICGDF)**: a two-stage statistical filter that requires a model to demonstrate genuine cross-sectional predictive skill (measured by Information Coefficient with HAC-corrected inference) before any capital is deployed. Both stages must pass simultaneously; if either fails, the system takes no position.
 
-I applied ICGDF to a three-model ensemble (CatBoost + Random Forest + MLP) on 30 NASDAQ-100 stocks across **1,512 consecutive out-of-sample trading days** (October 2018 – October 2024). The gate never opened — not once in twelve walk-forward folds. Mean IC = −0.0005, HAC t = −0.09, p = 0.464.
+I applied ICGDF to a three-model ensemble (CatBoost + Random Forest + MLP) on 30 NASDAQ-100 stocks across **1,512 consecutive out-of-sample trading days** (October 2018 – October 2024). The gate never opened — not once in twelve walk-forward folds. Mean IC = −0.0005, HAC t = −0.09, p = 0.536 (one-tailed, H₁: IC > 0).
 
 That is the finding. And it is worth reporting carefully.
 
 > **The model is well-calibrated (ECE < 0.025) but produces zero exploitable cross-sectional discrimination.** This demonstrates that calibration quality and predictive content are orthogonal properties — a subtle but important distinction for practitioners who use probability estimates as a deployment readiness signal.
 
-A momentum positive control (252-day trailing return) achieves Sharpe = 0.57 over the same window, confirming that cross-sectional structure *does* exist in this universe. Momentum's IC is directionally positive but statistically insufficient under HAC-corrected inference (p = 0.276), suggesting its return comes from multi-week trend persistence rather than daily rank discrimination — a mechanistically distinct channel that the IC gate is not designed to screen.
+A momentum positive control (252-day trailing return) achieves Sharpe = 0.57 over the same window, confirming that cross-sectional structure *does* exist in this universe. Momentum's IC is directionally positive (Mean IC = +0.010, HAC t = +1.35, p = 0.089) but statistically insufficient under HAC-corrected inference at α = 0.05, suggesting its return comes from multi-week trend persistence rather than daily rank discrimination — a mechanistically distinct channel that the IC gate is not designed to screen.
 
 ---
 
@@ -34,7 +34,7 @@ A momentum positive control (252-day trailing return) achieves Sharpe = 0.57 ove
 | Mean IC | −0.0005 | > 0 | — |
 | IC Std Dev | 0.2204 | — | — |
 | HAC t-statistic | −0.09 | > 1.645 | Not significant |
-| p-value (one-tailed) | 0.464 | < 0.05 | **Gate CLOSED** |
+| p-value (one-tailed) | 0.536 | < 0.05 | **Gate CLOSED** |
 | Permutation p-value | 0.742 | < 0.05 | **Gate CLOSED** |
 | Gate-open folds | 0 / 12 | ≥ 1 | Never opened |
 
@@ -192,7 +192,7 @@ Simulated AR(1) null IC process (φ = 0.30, N = 126 days/trial, 500 trials):
 | Check | Key Result | Interpretation |
 |---|---|---|
 | R1: Expanded Universe (N=100) | IC = −0.006, p = 0.947 | Not universe-specific |
-| R2: SHAP Feature Attribution | Inter-fold rank ρ = 0.13–0.40 | No stable signal; noise-fitting confirmed |
+| R2: SHAP Feature Attribution | Inter-fold rank ρ = 0.51 | No stable signal; noise-fitting confirmed |
 | R3: Diebold-Mariano Test | DM = 0.42, p = 0.672 vs. Random Top-1 | ML indistinguishable from random selection |
 | R4: VIX-Conditioned IC | Min p = 0.136 across all regimes | Gate closed in all volatility environments |
 | R5: Block Bootstrap CIs | 0 / 12 folds exclude zero | All fold CIs consistent with null IC |
@@ -201,8 +201,8 @@ Simulated AR(1) null IC process (φ = 0.30, N = 126 days/trial, 500 trials):
 
 | Signal | Mean IC | IC Std | HAC t | p-value | Gate |
 |---|---|---|---|---|---|
-| ML Ensemble | −0.0005 | 0.2204 | −0.09 | 0.464 | CLOSED |
-| Momentum (252-day) | +0.0071 | 0.4747 | +0.60 | 0.276 | CLOSED |
+| ML Ensemble | −0.0005 | 0.2204 | −0.09 | 0.536 | CLOSED |
+| Momentum (252-day) | +0.0104 | 0.3298 | +1.35 | 0.089 | CLOSED |
 
 Momentum's Sharpe advantage (0.57) arises from multi-week trend persistence, not daily IC significance — a mechanistically distinct predictive channel.
 
