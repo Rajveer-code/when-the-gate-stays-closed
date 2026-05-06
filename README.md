@@ -192,7 +192,7 @@ Simulated AR(1) null IC process (φ = 0.30, N = 126 days/trial, 500 trials):
 | Check | Key Result | Interpretation |
 |---|---|---|
 | R1: Expanded Universe (N=100) | IC = −0.006, p = 0.947 | Not universe-specific |
-| R2: SHAP Feature Attribution | Inter-fold rank ρ = 0.51 | No stable signal; noise-fitting confirmed |
+| R2: SHAP Feature Attribution | Inter-fold rank ρ = 0.33 | Moderate feature stability; no dominant feature class across folds |
 | R3: Diebold-Mariano Test | DM = 0.42, p = 0.672 vs. Random Top-1 | ML indistinguishable from random selection |
 | R4: VIX-Conditioned IC | Min p = 0.136 across all regimes | Gate closed in all volatility environments |
 | R5: Block Bootstrap CIs | 0 / 12 folds exclude zero | All fold CIs consistent with null IC |
