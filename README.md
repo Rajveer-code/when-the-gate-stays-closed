@@ -52,21 +52,21 @@ when-the-gate-stays-closed/
 │
 ├── src/                                            # Core pipeline modules
 │   ├── data/
-│   │   └── data_loader.py                          # Yahoo Finance data acquisition
+│   │   └── data_loader.py                          # Data loading & 49-feature engineering
 │   ├── training/
 │   │   ├── models.py                               # CatBoost, Random Forest, MLP ensemble
-│   │   ├── calibration.py                          # Isotonic probability calibration
+│   │   ├── calibration.py                          # Isotonic probability calibration + IC tests
 │   │   └── walk_forward.py                         # 12-fold expanding-window validator
 │   └── backtesting/
 │       └── backtester.py                           # Vectorised portfolio backtest engine
 │
 ├── scripts/
 │   ├── run_experiments.py                          # Main pipeline entry point
-│   ├── factor_regression.py                        # Fama-French factor regressions
+│   ├── factor_regression.py                        # Fama-French factor regressions (HAC OLS)
 │   ├── parallel_permutation.py                     # Permutation test (parallelised, B=1,000)
 │   ├── robustness/
 │   │   ├── robustness_01_expanded_universe.py      # R1: N=100 universe check
-│   │   ├── robustness_02_shap_analysis.py          # R2: SHAP feature attribution & stability
+│   │   ├── robustness_02_shap_analysis.py          # R2: Feature attribution & fold stability
 │   │   ├── robustness_03_04_05_dm_vix_bootstrap.py # R3–R5: DM test, VIX IC, bootstrap CIs
 │   │   ├── robustness_06_momentum_ic_gate.py       # Momentum positive control (IC gate)
 │   │   └── robustness_07_ablation.py               # Gate component ablation study
@@ -84,19 +84,32 @@ when-the-gate-stays-closed/
 │   │   ├── pub/                                    # Publication-ready figures (PNG + PDF)
 │   │   └── revision_audit/                         # Figures from audit scripts
 │   ├── metrics/                                    # IC statistics, strategy metrics (CSV)
+│   │   ├── ic_test_results.csv                     # Mean IC, HAC t, p-value
+│   │   ├── strategy_comparison.csv                 # Sharpe, Sortino, drawdown per strategy
+│   │   ├── factor_regression_topk1_specs.csv       # CAPM/FF3/FF5/FF5+MOM for TopK1
+│   │   ├── factor_regression_all_strategies.csv    # Factor regressions for all strategies
+│   │   ├── daily_strategy_returns.csv              # Daily returns used in factor regressions
+│   │   ├── k_sensitivity.csv                       # Performance vs K (TopK1–K5)
+│   │   ├── cost_sensitivity_topk1.csv              # Performance vs transaction cost
+│   │   └── subperiod_analysis.csv                  # IC statistics by sub-period
 │   ├── permutation/                                # Permutation null distributions (CSV)
-│   ├── plots/reliability_diagrams/                 # Per-fold calibration diagrams
+│   │   ├── permutation_topk1.csv                   # 1,000 permuted mean ICs
+│   │   └── permutation_topk1_summary.csv           # Empirical p-value summary
+│   ├── predictions/                                # Model conviction scores (tracked, ~3.2 MB)
+│   │   ├── fold_01.parquet … fold_12.parquet       # Per-fold predictions (30 stocks × ~126 days)
+│   │   └── predictions_ensemble.parquet            # Full OOS ensemble (45,360 rows)
+│   ├── plots/reliability_diagrams/                 # Per-fold calibration diagrams (36 PNGs)
 │   └── robustness/
-│       ├── expanded_universe/                      # R1 outputs
-│       ├── shap/                                   # R2 outputs
-│       ├── dm_test/                                # R3 outputs
-│       ├── vix_ic/                                 # R4 outputs
-│       ├── bootstrap/                              # R5 outputs
-│       ├── momentum_ic/                            # Momentum IC gate results
-│       └── ablation/                               # Ablation study results
+│       ├── expanded_universe/                      # R1: IC with N=100 stocks
+│       ├── shap/                                   # R2: Feature importance & rank stability
+│       ├── dm_test/                                # R3: Diebold-Mariano test results
+│       ├── vix_ic/                                 # R4: VIX-conditioned IC by regime
+│       ├── bootstrap/                              # R5: Block bootstrap CIs for fold ICs
+│       ├── momentum_ic/                            # Momentum positive control results
+│       └── ablation/                               # Gate component ablation results
 │
 ├── data/
-│   └── nasdaq30_prices.parquet                     # Adjusted OHLCV, 30 stocks, 2015–2024
+│   └── nasdaq30_prices.parquet                     # Adjusted OHLCV, 30 stocks, Jan 2015–Dec 2024
 │
 ├── generate_figures.py                             # Publication figure generation
 ├── build_manuscript_v2.py                          # Manuscript builder (python-docx)
@@ -177,6 +190,17 @@ The gate is **model-agnostic**: any base learner producing a cross-sectional con
 | Random Top-1 | −4.6% | −0.12 | −0.15 | −65.6% | 1,461 |
 | **TopK1 (ML, gate closed)** | **−5.9%** | **−0.16** | **−0.21** | **−67.0%** | 833 |
 
+### Factor Regression: ML TopK1 vs. Equal-Weight Benchmark
+
+| Specification | ML TopK1 α | t-stat | p-value |
+|---|---|---|---|
+| CAPM | −1.7% | −0.15 | 0.882 |
+| FF3 | −2.1% | −0.18 | 0.857 |
+| FF5 | −0.5% | −0.04 | 0.967 |
+| FF5+MOM | −0.5% | −0.04 | 0.969 |
+
+*Equal-Weight Benchmark earns significant positive alpha (FF5+MOM: +22.3%, t=+2.47, p=0.014), reflecting NASDAQ tech-sector concentration premium. ML TopK1 earns zero alpha across all specifications — consistent with IC ≈ 0.*
+
 ### Ablation Study: Why Both Gate Components Are Necessary
 
 Simulated AR(1) null IC process (φ = 0.30, N = 126 days/trial, 500 trials):
@@ -192,7 +216,7 @@ Simulated AR(1) null IC process (φ = 0.30, N = 126 days/trial, 500 trials):
 | Check | Key Result | Interpretation |
 |---|---|---|
 | R1: Expanded Universe (N=100) | IC = −0.006, p = 0.947 | Not universe-specific |
-| R2: SHAP Feature Attribution | Inter-fold rank ρ = 0.33 | Moderate feature stability; no dominant feature class across folds |
+| R2: Feature Attribution (SHAP) | Inter-fold rank ρ = 0.33 | Moderate stability; no dominant feature class across folds |
 | R3: Diebold-Mariano Test | DM = 0.42, p = 0.672 vs. Random Top-1 | ML indistinguishable from random selection |
 | R4: VIX-Conditioned IC | Min p = 0.136 across all regimes | Gate closed in all volatility environments |
 | R5: Block Bootstrap CIs | 0 / 12 folds exclude zero | All fold CIs consistent with null IC |
@@ -222,19 +246,26 @@ A well-calibrated model with zero IC is a real, practically important failure mo
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/Rajveer-code/transaction-cost-trap.git
-cd transaction-cost-trap
+git clone https://github.com/Rajveer-code/when-the-gate-stays-closed.git
+cd when-the-gate-stays-closed
 pip install -r requirements.txt
 ```
 
-> **Data note:** `data/nasdaq30_prices.parquet` (3.2 MB) is included and contains adjusted OHLCV for all 30 stocks from January 2015 through December 2024. Scripts use this cached file by default; delete it to force a fresh Yahoo Finance download.
+> **Data note:** `data/nasdaq30_prices.parquet` (3.2 MB) is included in the repo and contains adjusted OHLCV for all 30 stocks from January 2015 through December 2024. Scripts use this cached file by default; delete it to force a fresh Yahoo Finance download.
+>
+> **Predictions note:** `results/predictions/` is also included (~3.2 MB total) so that `factor_regression.py` can run immediately without re-training. Delete to regenerate from scratch.
 
 ### 2. Run the main pipeline (~30 min)
 
 ```bash
-python scripts/run_experiments.py          # Walk-forward training, IC gate, backtest
-python scripts/factor_regression.py        # CAPM / FF3 / FF5 / FF5+MOM regressions
-python scripts/parallel_permutation.py     # Permutation null (B=1,000, parallelised)
+# Full 30-stock pipeline — always pass --data-path for the paper's results
+python scripts/run_experiments.py --data-path data/nasdaq30_prices.parquet
+
+# Then run factor regression (requires predictions parquet from above step)
+python scripts/factor_regression.py
+
+# Permutation null distribution (parallelised, ~5 min)
+python scripts/parallel_permutation.py
 ```
 
 ### 3. Run robustness checks (in order)
@@ -253,12 +284,12 @@ All write outputs to `results/robustness/`. Run from the repository root.
 
 ```bash
 python generate_figures.py
-# → results/figures/pub/fig01_*.png through fig12_*.png
+# → results/figures/pub/fig01_*.png through fig12_*.png (PNG + PDF)
 ```
 
 ### 5. Run revision audit scripts
 
-These self-contained scripts address statistical methodology questions raised during peer review (power analysis, HAC bandwidth justification, permutation test interpretation, survivorship bias quantification, MLP calibration overlap, p-value consistency, and data validation).
+These self-contained scripts address statistical methodology questions raised during peer review: power analysis, HAC bandwidth justification, permutation test interpretation, survivorship bias quantification, MLP calibration overlap, p-value consistency, and data validation.
 
 ```bash
 cd scripts/revision_audit
@@ -274,7 +305,7 @@ python yfinance_data_validation_report.py   # Data quality protocol
 # Figures are saved to results/figures/revision_audit/
 ```
 
-Each script prints results directly to stdout in LaTeX-compatible format for manuscript insertion, and requires only `numpy`, `scipy`, and `matplotlib`.
+Each script prints results directly to stdout in LaTeX-compatible format, and requires only `numpy`, `scipy`, and `matplotlib`.
 
 ### 6. Build the manuscript document
 
@@ -319,7 +350,7 @@ pip install -r requirements.txt
              Using an {IC}-Gated Machine Learning Framework},
   author  = {Pall, Rajveer Singh},
   year    = {2025},
-  note    = {Working paper. Available at \url{https://github.com/Rajveer-code/transaction-cost-trap}}
+  note    = {Working paper. Available at \url{https://github.com/Rajveer-code/when-the-gate-stays-closed}}
 }
 ```
 
