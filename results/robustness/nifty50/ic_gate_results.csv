@@ -1,0 +1,2 @@
+mean_ic,ic_std,icir,T,hac_t_stat,hac_p_value_one_tailed,permutation_p_value,gate_decision,condition_a_met,condition_b_met
+0.01134986907126119,0.2414191477017055,0.04701312708337844,1355,2.0083542305222735,0.022302831450182636,0.801,CLOSED,True,False

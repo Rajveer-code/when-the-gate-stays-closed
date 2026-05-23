@@ -174,10 +174,12 @@ when-the-gate-stays-closed/
 |   +-- parallel_permutation.py      # Permutation null distribution (B=1,000)
 |   +-- robustness/
 |   |   +-- robustness_01_expanded_universe.py
-|   |   +-- robustness_02_shap_analysis.py
+|   |   +-- robustness_02_shap_analysis.py    # TreeSHAP (CatBoost + RF)
 |   |   +-- robustness_03_04_05_dm_vix_bootstrap.py
 |   |   +-- robustness_06_momentum_ic_gate.py
 |   |   +-- robustness_07_ablation.py
+|   |   +-- mlp_deepshap.py          # MLP attribution via Captum IntegratedGradients
+|   |   +-- nifty50_replication.py   # R6: cross-market replication (20 Nifty 50 stocks)
 |   +-- revision_audit/
 |       +-- power_analysis.py
 |       +-- hac_lag_sensitivity.py
@@ -187,10 +189,14 @@ when-the-gate-stays-closed/
 +-- results/
 |   +-- figures/pub/          # Publication-ready figures (PNG + PDF)
 |   +-- metrics/              # IC statistics and strategy metrics (CSV)
-|   +-- robustness/           # Robustness check outputs (R1-R5)
+|   +-- robustness/
+|       +-- shap/             # TreeSHAP + MLP attribution + rank correlation CSVs
+|       +-- nifty50/          # R6: IC gate results, fold stats, data integrity (CSV)
+|       +-- [other checks]/   # R1-R5 outputs (ablation, bootstrap, dm_test, vix_ic)
 |
 +-- data/
-|   +-- nasdaq30_prices.parquet      # Adjusted OHLCV, 30 stocks, 2015-2024
+|   +-- nasdaq30_prices.parquet      # Adjusted OHLCV, 30 NASDAQ-100 stocks, 2015-2024
+|   +-- nifty50_prices.parquet       # Adjusted OHLCV, 20 Nifty 50 stocks, 2015-2024
 |
 +-- generate_figures.py
 +-- build_manuscript_v2.py
@@ -201,7 +207,7 @@ when-the-gate-stays-closed/
 
 ## Reproducing Results
 
-> **Data:** `data/nasdaq30_prices.parquet` (adjusted OHLCV, 30 NASDAQ-100 stocks, Jan 2015 – Dec 2024, ~3.2 MB) is included in the repository. Delete to force a fresh Yahoo Finance download. All reported results use this cached file.
+> **Data:** `data/nasdaq30_prices.parquet` (30 NASDAQ-100 stocks, Jan 2015 – Dec 2024, ~3.2 MB) and `data/nifty50_prices.parquet` (20 Nifty 50 stocks, Jan 2015 – Dec 2024, ~2.2 MB) are both included. Delete either file to force a fresh Yahoo Finance download via `yfinance`.
 
 > **Reproducibility:** All stochastic components use `seed=42`. All models trained with `n_jobs=1`. Results are fully deterministic given fixed data and environment. Tested on Python 3.10-3.12, Windows 11 and Ubuntu 22.04.
 
@@ -226,6 +232,8 @@ python scripts/robustness/robustness_02_shap_analysis.py          # ~5 min
 python scripts/robustness/robustness_03_04_05_dm_vix_bootstrap.py # ~10 min
 python scripts/robustness/robustness_06_momentum_ic_gate.py       # ~3 min
 python scripts/robustness/robustness_07_ablation.py               # ~2 min
+python scripts/robustness/mlp_deepshap.py                         # ~45 min (MLP attribution, folds 9-12)
+python scripts/robustness/nifty50_replication.py                  # ~10 min (Nifty 50 cross-market, R6)
 ```
 
 **4. Generate publication figures**
