@@ -198,6 +198,7 @@ when-the-gate-stays-closed/
 |   +-- nasdaq30_prices.parquet      # Adjusted OHLCV, 30 NASDAQ-100 stocks, 2015-2024
 |   +-- nifty50_prices.parquet       # Adjusted OHLCV, 20 Nifty 50 stocks, 2015-2024
 |
++-- figures/               # HAC sensitivity, power analysis, IC summary (fig01-fig15)
 +-- generate_figures.py
 +-- build_manuscript_v2.py
 +-- requirements.txt
