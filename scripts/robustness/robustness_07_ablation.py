@@ -21,13 +21,12 @@ Applied to:
 IMPORTANT: Run robustness_06_momentum_ic_gate.py BEFORE this script.
 
 Run from repo root:
-    cd C:\\Users\\Asus\\Downloads\\financial-sentiment-nlp\\research_clean
     python scripts/robustness/robustness_07_ablation.py
 
 Outputs:
     results/robustness/ablation/ablation_results.csv
     results/robustness/ablation/fold_ablation.csv
-    Console: formatted table — COPY and return to Claude to update manuscript.
+    Console: formatted table — copy values into Table 11 of the manuscript.
 """
 
 from __future__ import annotations
@@ -355,8 +354,8 @@ def main() -> None:
     print(f"\n  [SAVED] {OUT_DIR}/ablation_results.csv")
     print(f"  [SAVED] {OUT_DIR}/fold_ablation.csv")
     print()
-    print("  *** COPY THIS ENTIRE OUTPUT AND RETURN TO CLAUDE ***")
-    print("  *** (Claude will use it to populate Table 11 in the manuscript) ***")
+    print("  Results saved to results/robustness/ablation/")
+    print("  Use ablation_results.csv to populate Table 11 in the manuscript.")
     print()
 
 

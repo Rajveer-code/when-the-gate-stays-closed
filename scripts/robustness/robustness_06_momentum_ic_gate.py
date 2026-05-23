@@ -10,24 +10,29 @@ signal from noise. This is the critical positive control for the paper.
 Signal : Trailing 252-day return (Jegadeesh & Titman 1993 momentum)
 Gate   : Same two-stage ICGDF gate (HAC Newey-West t-test lag=9, B=1,000)
 Window : Oct 2018 – Oct 2024 (same 1,512 OOS days as main experiment)
-Universe: 7 large-cap NASDAQ-100 stocks (AAPL, MSFT, GOOGL, AMZN, META, NVDA, TSLA)
+Universe: Full 30-stock NASDAQ-100 continuous-member universe
+          Loaded from data/nasdaq30_prices.parquet (primary source)
 
 Run from repo root:
-    cd C:\\Users\\Asus\\Downloads\\financial-sentiment-nlp\\research_clean
     python scripts/robustness/robustness_06_momentum_ic_gate.py
 
 Outputs:
     results/robustness/momentum_ic/momentum_ic_gate_results.csv
     results/robustness/momentum_ic/daily_ic_series.csv
-    Console: formatted table — COPY and return to Claude to update manuscript.
+    Console: formatted table — copy values into Table 10 of the manuscript.
 
 Dependencies: numpy, pandas, scipy, yfinance (all already installed in venv)
 """
 
 from __future__ import annotations
 
+import sys
 import warnings
 from pathlib import Path
+
+# Force UTF-8 output on Windows (required for Unicode box-drawing chars)
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
 
 import numpy as np
 import pandas as pd
@@ -38,7 +43,16 @@ warnings.filterwarnings("ignore")
 np.random.seed(42)
 
 # ── Configuration ──────────────────────────────────────────────────────────────
-TICKERS       = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
+# Full 30-stock NASDAQ-100 continuous-member universe (same as main experiment)
+TICKERS = [
+    "AAPL", "ADBE", "ADI",  "ADP",  "AMAT", "AMGN", "AMZN", "AVGO", "BIIB",
+    "CDNS", "COST", "CSCO", "GILD", "GOOGL","INTC", "INTU", "KLAC", "LRCX",
+    "MCHP", "MDLZ", "META", "MSFT", "NFLX", "NVDA", "PYPL", "QCOM", "REGN",
+    "SBUX", "TSLA", "TXN",
+]
+# Primary data source — same parquet used by the main pipeline
+NASDAQ30_PARQUET = Path("data/nasdaq30_prices.parquet")
+
 START_DATE    = "2015-01-01"   # need momentum_win days before OOS start
 END_DATE      = "2024-12-31"
 OOS_START     = "2018-10-01"   # same as main experiment
@@ -55,30 +69,50 @@ OUT_DIR.mkdir(parents=True, exist_ok=True)
 # ── Data loading ──────────────────────────────────────────────────────────────
 def load_prices() -> pd.DataFrame:
     """
-    Load/download adjusted close prices for all tickers.
-    Caches to parquet after first download to avoid repeated API calls.
+    Load adjusted close prices for all 30 tickers.
+
+    Primary source: data/nasdaq30_prices.parquet (MultiIndex date×ticker)
+    Fallback:       Yahoo Finance download (slower, requires network)
     """
-    cache = OUT_DIR / "price_cache.parquet"
-    if cache.exists():
-        print(f"  [CACHE] Loading prices from {cache}")
-        prices = pd.read_parquet(cache)
-    else:
-        print(f"  [DOWNLOAD] Fetching {len(TICKERS)} tickers from Yahoo Finance ...")
-        raw = yf.download(
-            TICKERS, start=START_DATE, end=END_DATE,
-            auto_adjust=True, progress=False
-        )
-        # Handle both multi-level and single-level column index
-        if isinstance(raw.columns, pd.MultiIndex):
-            prices = raw["Close"]
-        else:
-            prices = raw[["Close"]] if "Close" in raw.columns else raw
+    # ── Primary: load from master parquet ─────────────────────────────────────
+    if NASDAQ30_PARQUET.exists():
+        print(f"  [PARQUET] Loading prices from {NASDAQ30_PARQUET} ...")
+        raw = pd.read_parquet(NASDAQ30_PARQUET)
+        # raw is MultiIndex (date, ticker) with OHLCV columns topivot to wide Close
+        raw = raw.reset_index()
+        raw["date"] = pd.to_datetime(raw["date"]).dt.normalize()
+        prices = raw.pivot(index="date", columns="ticker", values="Close")
+        prices.index = pd.DatetimeIndex(prices.index)
+        prices = prices[sorted(prices.columns)]          # canonical column order
         prices = prices.dropna(how="all")
-        prices.to_parquet(cache)
-        print(f"  [SAVED] Cache written to {cache}")
+        # Restrict to TICKERS subset (parquet may have extra symbols)
+        cols_available = [t for t in TICKERS if t in prices.columns]
+        missing = [t for t in TICKERS if t not in prices.columns]
+        if missing:
+            print(f"  [WARN] Tickers not found in parquet: {missing}")
+        prices = prices[cols_available]
+    else:
+        # ── Fallback: Yahoo Finance download ──────────────────────────────────
+        cache = OUT_DIR / "price_cache.parquet"
+        if cache.exists():
+            print(f"  [CACHE] Loading prices from {cache}")
+            prices = pd.read_parquet(cache)
+        else:
+            print(f"  [DOWNLOAD] Fetching {len(TICKERS)} tickers from Yahoo Finance ...")
+            raw = yf.download(
+                TICKERS, start=START_DATE, end=END_DATE,
+                auto_adjust=True, progress=False
+            )
+            if isinstance(raw.columns, pd.MultiIndex):
+                prices = raw["Close"]
+            else:
+                prices = raw[["Close"]] if "Close" in raw.columns else raw
+            prices = prices.dropna(how="all")
+            prices.to_parquet(cache)
+            print(f"  [SAVED] Cache written to {cache}")
 
     print(f"  Price data shape: {prices.shape[0]:,} days × {prices.shape[1]} tickers")
-    print(f"  Date range: {prices.index[0].date()} → {prices.index[-1].date()}")
+    print(f"  Date range: {prices.index[0].date()} to{prices.index[-1].date()}")
     return prices
 
 
@@ -185,7 +219,7 @@ def main() -> None:
     ic_series = compute_daily_momentum_ic(prices)
     n_days    = len(ic_series)
     print(f"  IC series: {n_days:,} daily observations")
-    print(f"  OOS range: {ic_series.index[0].date()} → {ic_series.index[-1].date()}")
+    print(f"  OOS range: {ic_series.index[0].date()} to{ic_series.index[-1].date()}")
 
     # 3. Summary statistics
     ic_vals = ic_series.values
@@ -215,12 +249,12 @@ def main() -> None:
     print("  IC SERIES STATISTICS")
     print(sep)
     print(f"  Signal         : Trailing 252-day return (momentum)")
-    print(f"  Universe       : {len(TICKERS)} NASDAQ-100 large-cap stocks")
-    print(f"  OOS window     : {OOS_START} → {OOS_END} ({n_days:,} days)")
+    print(f"  Universe       : {len(TICKERS)} NASDAQ-100 continuous-member stocks")
+    print(f"  OOS window     : {OOS_START} to{OOS_END} ({n_days:,} days)")
     print(f"  Mean IC        : {mean_ic:+.6f}")
     print(f"  IC Std Dev     : {ic_std:.6f}")
     print(f"  ICIR           : {icir:+.4f}")
-    print(f"  AR(1) coeff    : {ar1_coeff:+.4f}  (autocorrelation → HAC necessary)")
+    print(f"  AR(1) coeff    : {ar1_coeff:+.4f}  (autocorrelation toHAC necessary)")
 
     print(f"\n{sep}")
     print("  HAC T-TEST  (Newey-West, lag=9)")
@@ -278,8 +312,8 @@ def main() -> None:
     print(f"\n  [SAVED] {OUT_DIR}/momentum_ic_gate_results.csv")
     print(f"  [SAVED] {OUT_DIR}/daily_ic_series.csv")
     print()
-    print("  *** COPY THIS ENTIRE OUTPUT AND RETURN TO CLAUDE ***")
-    print("  *** (Claude will use it to populate Table 10 in the manuscript) ***")
+    print("  Results saved to results/robustness/momentum_ic/")
+    print("  Use momentum_ic_gate_results.csv to populate Table 10 in the manuscript.")
     print()
 
 

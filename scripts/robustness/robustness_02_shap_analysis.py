@@ -657,7 +657,7 @@ def main():
     top5 = shap_df["mean_across_folds"].head(5).index.tolist()
     print(f"\n[DONE] Top-5 features: {', '.join(top5)}")
     print(f"       Mean rank stability rho: {mean_off:.4f}")
-    print(f"       Paste both CSVs back to Claude for manuscript update.")
+    print(f"       See results/robustness/shap/ for CSV outputs to use in manuscript.")
 
 
 if __name__ == "__main__":

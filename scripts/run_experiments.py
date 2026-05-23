@@ -1,12 +1,16 @@
 """
-run_experiments.py  —  FIXED VERSION
-=====================================
-Fixes applied vs previous version:
-  1. exclude_ticker passed as parameter to run_walk_forward_loop (was NameError)
-  2. NVDA-excluded run uses suffix _nolvda on checkpoint files (no overwrite)
-  3. All tested on Git Bash (MINGW64) on Windows
+run_experiments.py
+==================
+Main pipeline entry point for the ICGDF paper.
 
-ADDED FLAGS:
+To reproduce paper results (30-stock NASDAQ-100 universe):
+    python scripts/run_experiments.py --data-path data/nasdaq30_prices.parquet
+
+Without --data-path, the script falls back to downloading 7-stock data
+from Yahoo Finance (development / quick-check mode only).
+
+Flags:
+  --data-path PATH         External OHLCV parquet (MultiIndex date x ticker)
   --model {ensemble,catboost,rf}
   --uncalibrated
   --exclude-ticker TICKER

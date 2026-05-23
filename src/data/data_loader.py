@@ -3,9 +3,10 @@ data_loader.py
 ==============
 Production-grade data loader for the Cross-Sectional Conviction Ranking paper.
 
-Downloads daily OHLCV data for 7 large-cap US tech stocks (2015–2025),
-constructs 47 strictly causal technical indicators, and creates the
-forward-shifted binary target label y_t = 1{Close(t+2) > Close(t+1)}.
+Downloads daily OHLCV data for NASDAQ-100 constituent stocks (2015–2025)
+or loads from an external parquet source (e.g. data/nasdaq30_prices.parquet
+for the full 30-stock universe used in the paper), constructs 49 strictly
+causal technical indicators, and creates the forward-shifted target label.
 
 CRITICAL DESIGN DECISIONS:
   - ALL rolling functions use min_periods and NO center=True to ensure
@@ -40,6 +41,9 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 # CONFIGURATION
 # ---------------------------------------------------------------------------
 
+# Default 7-stock universe used when no external_data_path is provided.
+# The paper's 30-stock results are reproduced via:
+#   load_all_data(external_data_path="data/nasdaq30_prices.parquet")
 TICKERS: List[str] = ["AAPL", "MSFT", "GOOGL", "AMZN", "META", "NVDA", "TSLA"]
 START_DATE: str = "2015-01-01"
 END_DATE: str = "2025-01-01"

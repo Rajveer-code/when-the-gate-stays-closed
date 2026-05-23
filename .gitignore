@@ -17,13 +17,19 @@ data/raw/
 data/combined/
 data/extended/
 
-# ── Robustness cache files (large parquets, regenerated on demand) ────────────
-results/robustness/**/*.parquet
-results/robustness/**/*.json
+# ── Robustness cache files (large intermediate parquets, regenerated on demand)
+# Large files (feature matrices, raw universe downloads, price caches)
+results/robustness/expanded_universe/feature_matrix_100.parquet
+results/robustness/expanded_universe/universe_100_raw.parquet
+results/robustness/momentum_ic/price_cache.parquet
+results/robustness/vix_ic/vix_cache.parquet
+results/robustness/shap/feature_cache.parquet
 src/results/
 
-# ── Prediction outputs (large, regenerated from walk_forward.py) ─────────────
-results/predictions/
+# ── Prediction outputs — tracked for reproducibility (fold parquets + ensemble)
+# results/predictions/ is intentionally NOT ignored — fold_*.parquet and
+# predictions_ensemble.parquet (total ~3.2 MB) are included so that
+# factor_regression.py can run without re-running the full 30-min pipeline.
 results/predictions_ensemble.csv
 
 # ── Training artifacts ───────────────────────────────────────────────────────
@@ -50,9 +56,11 @@ scripts/shap_rf_mlp.py
 _msg_filter.py
 research-workspace/
 unpacked/
+unpacked_revised/
 build_final_manuscript.py
 run_experiments_patched.py
 transaction-cost-trap/
+when-the-gate-stays-closed/
 
 # ── Draft manuscript (only FINAL version is tracked) ─────────────────────────
 paper/when_the_gate_stays_closed.docx

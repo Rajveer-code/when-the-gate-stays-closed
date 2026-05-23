@@ -323,9 +323,12 @@ def test_ic_significance(daily_ic_values: list[float]) -> Dict[str, Any]:
     ic_std = float(np.std(daily_ic_values, ddof=1))
     icir = mean_ic / ic_std if ic_std > 0 else 0.0
 
-    # 1-sample t-test: H0: mean_ic = 0, H1: mean_ic > 0
-    t_stat, two_tailed_p = scipy.stats.ttest_1samp(daily_ic_values, 0)
-    p_value = two_tailed_p / 2.0  # one-tailed
+    # 1-sample t-test: H0: mean_ic <= 0, H1: mean_ic > 0 (upper-tail, one-sided)
+    # NOTE: the main ICGDF gate uses the HAC Newey-West t-stat; this naive t-test
+    # is a quick diagnostic summary only.  See run_experiments.py for gate logic.
+    t_stat, _ = scipy.stats.ttest_1samp(daily_ic_values, 0)
+    # Upper-tail p-value: P(T > t_stat | H0) — correct for H1: IC > 0
+    p_value = float(scipy.stats.t.sf(t_stat, df=n_days - 1))
 
     significant = bool(p_value < 0.05 and mean_ic > 0)
 
