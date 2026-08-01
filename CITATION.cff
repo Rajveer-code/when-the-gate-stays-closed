@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "When the Gate Stays Closed: Empirical Evidence of Near-Zero Cross-Sectional Predictability in Large-Cap NASDAQ Equities Using an IC-Gated Machine Learning Framework"
+type: software
+authors:
+  - family-names: Pall
+    given-names: "Rajveer Singh"
+    orcid: "https://orcid.org/0009-0001-6762-6134"
+license: MIT
+repository-code: "https://github.com/Rajveer-code/when-the-gate-stays-closed"
+identifiers:
+  - type: other
+    value: "SSRN:6742700"
+    description: "SSRN preprint"
