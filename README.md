@@ -7,14 +7,13 @@
 <p align="left">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e" alt="MIT License"/></a>
-  <img src="https://img.shields.io/badge/QFE-Under%20Review-f59e0b" alt="Under Review"/>
+  <img src="https://img.shields.io/badge/Computational%20Economics-Under%20Review-f59e0b" alt="Under Review"/> 
   <img src="https://img.shields.io/badge/OOS%20Days-1%2C512-6366f1" alt="1512 OOS Days"/>
   <img src="https://img.shields.io/badge/Folds-12%20walk--forward-0ea5e9" alt="12 Folds"/>
   <img src="https://img.shields.io/badge/Reproducible-seed%2042-2A9D8F" alt="Reproducible"/>
 </p>
 
-> **Under review at *Quantitative Finance and Economics* (AIMS Press) — Q1 Web of Science (JCI), ESCI, Scopus, EconLit.**
-
+> **Under review at *Computational Economics* (Springer).**
 ---
 
 ## Overview
@@ -303,8 +302,7 @@ OHLCV data for both the NASDAQ-100 and Nifty 50 universes are sourced from Yahoo
              Using an {IC}-Gated Machine Learning Framework},
   author  = {Pall, Rajveer Singh},
   year    = {2025},
-  note    = {Under review at \textit{Quantitative Finance and Economics}
-             (AIMS Press). Code: \url{https://github.com/Rajveer-code/when-the-gate-stays-closed}}
+    note    = {Under review at \textit{Computational Economics} (Springer). Code: \url{https://github.com/Rajveer-code/when-the-gate-stays-closed}}
 }
 ```
 
