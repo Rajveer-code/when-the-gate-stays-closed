@@ -302,7 +302,7 @@ OHLCV data for both the NASDAQ-100 and Nifty 50 universes are sourced from Yahoo
              Using an {IC}-Gated Machine Learning Framework},
   author  = {Pall, Rajveer Singh},
   year    = {2025},
-    note    = {Under review at \textit{Computational Economics} (Springer). Code: \url{https://github.com/Rajveer-code/when-the-gate-stays-closed}}
+    note    = {SSRN preprint 6742700. Code: \url{https://github.com/Rajveer-code/when-the-gate-stays-closed}}
 }
 ```
 
