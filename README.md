@@ -7,13 +7,13 @@
 <p align="left">
   <a href="https://www.python.org/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"/></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-22c55e" alt="MIT License"/></a>
-  <img src="https://img.shields.io/badge/Computational%20Economics-Under%20Review-f59e0b" alt="Under Review"/> 
+  <img src="https://img.shields.io/badge/SSRN-6742700-1f6feb" alt="SSRN preprint 6742700"/> 
   <img src="https://img.shields.io/badge/OOS%20Days-1%2C512-6366f1" alt="1512 OOS Days"/>
   <img src="https://img.shields.io/badge/Folds-12%20walk--forward-0ea5e9" alt="12 Folds"/>
   <img src="https://img.shields.io/badge/Reproducible-seed%2042-2A9D8F" alt="Reproducible"/>
 </p>
 
-> **Under review at *Computational Economics* (Springer).**
+> **Preprint:** SSRN 6742700. Not currently under review.
 ---
 
 ## Overview
